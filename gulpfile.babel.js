@@ -105,13 +105,24 @@ function test() {
 function coverage(done) {
   _registerBabel();
   gulp.src(['src/**/*.js'])
-    .pipe($.istanbul({ instrumenter: Instrumenter }))
-    .pipe($.istanbul.hookRequire())
-    .on('finish', () => {
-      return test()
-        .pipe($.istanbul.writeReports())
-        .on('end', done);
-    });
+  .pipe($.istanbul({ instrumenter: Instrumenter }))
+  .pipe($.istanbul.hookRequire())
+  .on('finish', () => {
+    return test()
+    .pipe($.istanbul.writeReports({
+      dir        : './coverage',
+      reporters  : [
+        'lcov',
+        'json',
+        'text',
+        'text-summary'
+      ],
+      reportOpts : {
+        dir: './coverage'
+      }
+    }))
+    .on('end', done);
+  });
 }
 
 const watchFiles = ['src/**/*', 'test/**/*', 'package.json', '**/.eslintrc', '.jscsrc'];
