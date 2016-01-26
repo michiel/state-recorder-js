@@ -23,15 +23,26 @@ const clone = (obj) => {
 const JSONPatch = {
 
   add : (obj, path, value) => {
-    return `{ "op": "add", "path": "${path}", "value": ${toJSONString(value)} }`;
+    return {
+      op    : 'add',
+      path  : path,
+      value : value
+    };
   },
 
   remove : (obj, path) => {
-    return `{ "op": "remove", "path": "${path}" }`;
+    return {
+      op    : 'remove',
+      path  : path
+    };
   },
 
   replace : (obj, path, value) => {
-    return `{ "op": "replace", "path": "${path}", "value": ${toJSONString(value)} }`;
+    return {
+      op    : 'replace',
+      path  : path,
+      value : value
+    };
   }
 
 };
@@ -102,14 +113,14 @@ class UrState {
     const [obj, changes] = res;
     this._state = obj;
     this._changes.push(changes);
-    this._emit('change', fromJSONString([changes[1]]));
+    this._emit('change', clone([changes[1]]));
   }
 
   set(key, value) {
     if (this._state[key] !== undefined) {
-      this._makeChange('replace', key, value);
+      this._makeChange(JSON_PATCH_OPERATIONS.replace, key, value);
     } else {
-      this._makeChange('add', key, value);
+      this._makeChange(JSON_PATCH_OPERATIONS.add, key, value);
     }
   }
 
@@ -125,8 +136,7 @@ class UrState {
     return JSON.stringify(this._state);
   }
 
-  applyPatch(patchStr) {
-    const patch = fromJSONString(patchStr);
+  applyPatch(patch) {
     this._makeChange(
       patch.op,
       patch.path,
