@@ -8,16 +8,8 @@ const EVENTS = [
   'change'
 ];
 
-const toJSONString = (obj) => {
-  return JSON.stringify(obj);
-}
-
-const fromJSONString = (str) => {
-  return JSON.parse(str);
-}
-
 const clone = (obj) => {
-  return fromJSONString(toJSONString(obj));
+  return JSON.parse(JSON.stringify(obj));
 }
 
 const JSONPatch = {
@@ -46,6 +38,23 @@ const JSONPatch = {
   }
 
 };
+
+const exists = (arg)=> {
+  return (
+    (arg !== undefined) &&
+      (arg !== null)
+  )
+}
+
+const assertIsPatch = (patch) => {
+  if (
+    !exists(patch) ||
+    !exists(patch.op) ||
+      !exists(patch.path)
+  ) {
+    throw new Error('Not a valid patch : ' + patch);
+  }
+}
 
 const changeObject = {
 
@@ -117,7 +126,7 @@ class UrState {
   }
 
   set(key, value) {
-    if (this._state[key] !== undefined) {
+    if (this.has(key)) {
       this._makeChange(JSON_PATCH_OPERATIONS.replace, key, value);
     } else {
       this._makeChange(JSON_PATCH_OPERATIONS.add, key, value);
@@ -132,11 +141,16 @@ class UrState {
     return this._state[key];
   }
 
+  has(key) {
+    return !!this._state[key];
+  }
+
   serialize() {
     return JSON.stringify(this._state);
   }
 
   applyPatch(patch) {
+    assertIsPatch(patch);
     this._makeChange(
       patch.op,
       patch.path,
@@ -148,6 +162,18 @@ class UrState {
     while (patches.length > 0) {
       this.applyPatch(patches.unshift());
     }
+  }
+
+  getPatches() {
+    return clone(this._changes);
+  }
+
+  getReversePatches() {
+    return clone(this._changes.map((el) => el[0]));
+  }
+
+  getForwardPatches() {
+    return clone(this._changes.map((el) => el[1]));
   }
 
   _emit(evt, args=[]) {
