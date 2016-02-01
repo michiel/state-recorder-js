@@ -3,18 +3,38 @@ const JSON_PATCH_OPERATIONS = {
   remove  : 'remove',
   replace : 'replace'
 }
+type jsonPatchOperatorType = 'add' | 'remove' | 'replace';
+
+type jsonPatchType = {
+  op     : string,
+  path   : string,
+  value? : number|string|boolean
+};
+
+type jsonPatchPairType = [jsonPatchType, jsonPatchType];
 
 const EVENTS = [
   'change'
 ];
+type eventType = 'change'
 
-const clone = (obj) => {
+type stateKeyType      = string;
+type stateValueType    = number | string | boolean;
+type stateObjectType   = { [key: string] : stateValueType };
+type objectChangeType  = [stateObjectType, Array<jsonPatchType>];
+
+type observerStoreType = {
+  counter     : number,
+  subscribers : { [key: string] : Function };
+}
+
+const clone = (obj:any) : any => {
   return JSON.parse(JSON.stringify(obj));
 }
 
-const JSONPatch = {
+const GeneratePatch = {
 
-  add : (obj, path, value) => {
+  add (obj:stateObjectType, path:stateKeyType, value:stateValueType) : jsonPatchType {
     return {
       op    : 'add',
       path  : path,
@@ -22,14 +42,14 @@ const JSONPatch = {
     };
   },
 
-  remove : (obj, path) => {
+  remove (obj:stateObjectType, path:stateKeyType) : jsonPatchType {
     return {
       op    : 'remove',
       path  : path
     };
   },
 
-  replace : (obj, path, value) => {
+  replace (obj:stateObjectType, path:stateKeyType, value:stateValueType) : jsonPatchType {
     return {
       op    : 'replace',
       path  : path,
@@ -39,14 +59,14 @@ const JSONPatch = {
 
 };
 
-const exists = (arg)=> {
+const exists = (arg:any) : boolean => {
   return (
     (arg !== undefined) &&
       (arg !== null)
   )
 }
 
-const assertIsPatch = (patch) => {
+const assertIsPatch = (patch:jsonPatchType):void => {
   if (
     !exists(patch) ||
     !exists(patch.op) ||
@@ -56,30 +76,30 @@ const assertIsPatch = (patch) => {
   }
 }
 
-const changeObject = {
+const ChangeState = {
 
-  add : (obj, path, value) => {
+  add (obj:stateObjectType, path:stateKeyType, value:stateValueType) : objectChangeType  {
     const result = [
-      JSONPatch.remove(obj, path, value),
-      JSONPatch.add(obj, path, value)
+      GeneratePatch.remove(obj, path, value),
+      GeneratePatch.add(obj, path, value)
     ];
     obj[path] = value;
     return [obj, result];
   },
 
-  remove : (obj, path) => {
+  remove (obj:stateObjectType, path:stateKeyType) : objectChangeType {
     const result = [
-      JSONPatch.add(obj, path, obj[path]),
-      JSONPatch.remove(obj, path)
+      GeneratePatch.add(obj, path, obj[path]),
+      GeneratePatch.remove(obj, path)
     ];
     delete obj[path];
     return [obj, result];
   },
 
-  replace : (obj, path, value) => {
+  replace (obj:stateObjectType, path:stateKeyType, value:stateValueType) : objectChangeType {
     const result = [
-      JSONPatch.replace(obj, path, obj[path]),
-      JSONPatch.replace(obj, path, value)
+      GeneratePatch.replace(obj, path, obj[path]),
+      GeneratePatch.replace(obj, path, value)
     ];
     obj[path] = value;
     return [obj, result];
@@ -88,6 +108,11 @@ const changeObject = {
 };
 
 class UrState {
+
+  _version   : number;
+  _state     : stateObjectType;
+  _changes   : Array<jsonPatchPairType>;
+  _observers : { [key: string] : observerStoreType };
 
   constructor() {
     this._version     = 0;
@@ -104,18 +129,24 @@ class UrState {
 
   }
 
-  _makeChange(op, path, value) {
-    let res = [];
+  _makeChange(
+    op    : jsonPatchOperatorType,
+    path  : string,
+    value : ?stateValueType
+  ) : objectChangeType {
+
+    let res : ?objectChangeType = null;
     this._version++;
+
     switch (op) {
       case JSON_PATCH_OPERATIONS.add:
-        res = changeObject.add(this._state, path, value)
+        res = ChangeState.add(this._state, path, value)
         break;
       case JSON_PATCH_OPERATIONS.remove:
-        res = changeObject.remove(this._state, path)
+        res = ChangeState.remove(this._state, path)
         break;
       case JSON_PATCH_OPERATIONS.replace:
-        res = changeObject.replace(this._state, path, value)
+        res = ChangeState.replace(this._state, path, value)
         break;
     }
 
@@ -125,7 +156,7 @@ class UrState {
     this._emit('change', clone([changes[1]]));
   }
 
-  set(key, value) {
+  set(key:stateKeyType, value:stateValueType) : void {
     if (this.has(key)) {
       this._makeChange(JSON_PATCH_OPERATIONS.replace, key, value);
     } else {
@@ -133,23 +164,23 @@ class UrState {
     }
   }
 
-  remove(key) {
+  remove(key:stateKeyType) : void {
     this._makeChange('remove', key);
   }
 
-  get(key) {
+  get(key:stateKeyType) : ?stateValueType {
     return this._state[key];
   }
 
-  has(key) {
+  has(key:string) : boolean {
     return !!this._state[key];
   }
 
-  serialize() {
+  serialize() : string {
     return JSON.stringify(this._state);
   }
 
-  applyPatch(patch) {
+  applyPatch(patch:jsonPatchType) : void {
     assertIsPatch(patch);
     this._makeChange(
       patch.op,
@@ -158,38 +189,38 @@ class UrState {
     );
   }
 
-  applyPatches(patches=[]) {
+  applyPatches(patches:Array<jsonPatchType>=[]) : void {
     while (patches.length > 0) {
       this.applyPatch(patches.unshift());
     }
   }
 
-  getPatches() {
+  getPatches():Array<jsonPatchPairType> {
     return clone(this._changes);
   }
 
-  getReversePatches() {
+  getReversePatches():Array<jsonPatchType> {
     return clone(this._changes.map((el) => el[0]));
   }
 
-  getForwardPatches() {
+  getForwardPatches():Array<jsonPatchType> {
     return clone(this._changes.map((el) => el[1]));
   }
 
-  _emit(evt, args=[]) {
+  _emit(evt:eventType, args=[]) : void {
     const subs = this._observers[evt].subscribers;
     for (const sub in subs) {
       subs[sub](evt, clone(args));
     }
   }
 
-  on(evt, fn) {
+  on(evt:eventType, fn) : number {
     const id = this._observers[evt].counter++;
     this._observers[evt].subscribers[id] = fn;
     return id;
   }
 
-  off(evt, id) {
+  off(evt:eventType, id) : void {
     delete this._observers[evt].subscribers[id];
   }
 
