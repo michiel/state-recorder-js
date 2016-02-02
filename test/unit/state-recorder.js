@@ -1,9 +1,9 @@
-import UrState from '../../src/urstate';
+import StateRecorder from '../../src/state-recorder';
 
-describe('UrState', () => {
+describe('StateRecorder', () => {
   describe('Init', () => {
     it('should have been run once', () => {
-      const state = new UrState();
+      const state = new StateRecorder();
       spy(state, '_emit');
 
       state.set('keyStr', 'valueStr');
@@ -23,7 +23,7 @@ describe('UrState', () => {
 
   describe('Undo', () => {
     it('should reverse', () => {
-      const state = new UrState();
+      const state = new StateRecorder();
 
       state.set('key1', 'value1');
       state.set('key2', 'value2');

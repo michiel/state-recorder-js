@@ -107,7 +107,7 @@ const ChangeState = {
 
 };
 
-class UrState {
+class StateRecorder {
 
   _version   : number;
   _state     : stateObjectType;
@@ -226,4 +226,4 @@ class UrState {
 
 }
 
-export default UrState;
+export default StateRecorder;

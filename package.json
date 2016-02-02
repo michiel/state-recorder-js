@@ -1,8 +1,8 @@
 {
-  "name": "urstate",
+  "name": "state-recorder",
   "version": "0.0.1",
   "description": "State object",
-  "main": "dist/urstate.js",
+  "main": "dist/state-recorder.js",
   "scripts": {
     "test": "gulp",
     "lint": "gulp lint",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/michiel/urstate.git"
+    "url": "https://github.com/michiel/state-recorder.git"
   },
   "keywords": [
     "json-patch",
@@ -22,9 +22,9 @@
   "author": "Michiel Kalkman <michiel@nosuchtype.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/michiel/urstate/issues"
+    "url": "https://github.com/michiel/state-recorder/issues"
   },
-  "homepage": "https://github.com/michiel/urstate",
+  "homepage": "https://github.com/michiel/state-recorder",
   "devDependencies": {
     "babel-core": "^6.3.26",
     "babel-eslint": "^4.1.6",
@@ -64,8 +64,8 @@
     "webpack-stream": "^3.1.0"
   },
   "babelBoilerplateOptions": {
-    "entryFileName": "urstate",
-    "mainVarName": "urstate"
+    "entryFileName": "state-recorder",
+    "mainVarName": "StateRecorder"
   },
   "config": {
     "commitizen": {
