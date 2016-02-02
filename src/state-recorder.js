@@ -1,3 +1,5 @@
+/* @flow */
+
 const JSON_PATCH_OPERATIONS = {
   add     : 'add',
   remove  : 'remove',
