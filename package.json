@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/michiel/state-recorder.git"
+    "url": "https://github.com/michiel/state-recorder-js.git"
   },
   "keywords": [
     "json-patch",
@@ -22,9 +22,9 @@
   "author": "Michiel Kalkman <michiel@nosuchtype.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/michiel/state-recorder/issues"
+    "url": "https://github.com/michiel/state-recorder-js/issues"
   },
-  "homepage": "https://github.com/michiel/state-recorder",
+  "homepage": "https://github.com/michiel/state-recorder-js",
   "devDependencies": {
     "babel-core": "^6.3.26",
     "babel-eslint": "^4.1.6",
