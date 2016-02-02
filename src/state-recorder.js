@@ -59,23 +59,6 @@ const GeneratePatch = {
 
 };
 
-const exists = (arg:any) : boolean => {
-  return (
-    (arg !== undefined) &&
-      (arg !== null)
-  )
-}
-
-const assertIsPatch = (patch:jsonPatchType):void => {
-  if (
-    !exists(patch) ||
-    !exists(patch.op) ||
-      !exists(patch.path)
-  ) {
-    throw new Error('Not a valid patch : ' + patch);
-  }
-}
-
 const ChangeState = {
 
   add (obj:stateObjectType, path:stateKeyType, value:stateValueType) : objectChangeType  {
@@ -181,7 +164,6 @@ class StateRecorder {
   }
 
   applyPatch(patch:jsonPatchType) : void {
-    assertIsPatch(patch);
     this._makeChange(
       patch.op,
       patch.path,
